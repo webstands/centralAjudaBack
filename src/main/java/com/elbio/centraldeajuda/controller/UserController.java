@@ -23,8 +23,8 @@ public class UserController {
 
     @Transactional
     @PostMapping("/users")
-    public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
-        return userService.newUser(dto);
+    public ResponseEntity<Void> registerUser(@RequestBody CreateUserDto dto) {
+        return userService.registerUser(dto);
     }
 
     @GetMapping("/users")

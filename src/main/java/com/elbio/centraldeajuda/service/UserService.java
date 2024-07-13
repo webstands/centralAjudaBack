@@ -28,9 +28,9 @@ public class UserService {
     private  BCryptPasswordEncoder passwordEncoder;
 
 
-    public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
+    public ResponseEntity<Void> registerUser(@RequestBody CreateUserDto dto) {
 
-        var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
+        var basicRole = roleRepository.findByName(Role.Values.USUARIO.name());
 
         var userFromDb = userRepository.findByUsername(dto.username());
         if (userFromDb.isPresent()) {
