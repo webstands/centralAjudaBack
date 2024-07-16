@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/calls")
@@ -20,21 +21,21 @@ public class CallController {
 
     private CallService callService;
 
-    public ResponseEntity<CallDto> createCall(@AuthenticationPrincipal User user,
+    public ResponseEntity<CallDto> createCall(UUID UIIUser,
                                               @RequestBody CallDto callDto) {
-        CallDto newCallDto = callService.createCall(user, callDto.subject(), callDto.description());
+        CallDto newCallDto = callService.createCall(UIIUser, callDto.subject(), callDto.description());
         return ResponseEntity.ok(newCallDto);
     }
 
     @GetMapping
-    public ResponseEntity<Page<CallDto>> listUserCalls(@AuthenticationPrincipal User user,
+    public ResponseEntity<Page<CallDto>> listUserCalls(UUID UIIUser,
                                                        Pageable pageable) {
-        Page<CallDto> callDtos = callService.listUserCalls(user, pageable);
+        Page<CallDto> callDtos = callService.listUserCalls(UIIUser, pageable);
         return ResponseEntity.ok(callDtos);
     }
 
     @PostMapping("/close/{id}")
-    public ResponseEntity<CallDto> closeCall(@PathVariable Long id, @AuthenticationPrincipal User closedBy, @RequestParam int rating) {
+    public ResponseEntity<CallDto> closeCall(@PathVariable Long id, UUID closedBy, @RequestParam int rating) {
         CallDto callDto = callService.closeCall(id, closedBy, rating);
         return ResponseEntity.ok(callDto);
     }

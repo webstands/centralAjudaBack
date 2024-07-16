@@ -30,6 +30,22 @@ public class AdminUserConfig implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
+        // Inserir roles
+        Role adminRole = new Role();
+        adminRole.setRoleId(1L);
+        adminRole.setName(Role.Values.ADMIN.name());
+        roleRepository.save(adminRole);
+
+        Role userRole = new Role();
+        userRole.setRoleId(2L);
+        userRole.setName(Role.Values.USUARIO.name());
+        roleRepository.save(userRole);
+
+        Role managerRole = new Role();
+        managerRole.setRoleId(3L);
+        managerRole.setName(Role.Values.GERENCIADOR.name());
+        roleRepository.save(managerRole);
+
         var roleAdmin = roleRepository.findByName(Role.Values.ADMIN.name());
 
         var userAdmin = userRepository.findByUsername("admin");

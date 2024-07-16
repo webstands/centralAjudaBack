@@ -3,8 +3,9 @@ package com.elbio.centraldeajuda.service;
 import com.elbio.centraldeajuda.controller.dto.CreateUserDto;
 import com.elbio.centraldeajuda.controller.dto.RoleDto;
 import com.elbio.centraldeajuda.controller.dto.UserResponse;
-import com.elbio.centraldeajuda.entities.Role;
+import com.elbio.centraldeajuda.entities.Call;
 import com.elbio.centraldeajuda.entities.User;
+import com.elbio.centraldeajuda.repository.CallRepository;
 import com.elbio.centraldeajuda.repository.RoleRepository;
 import com.elbio.centraldeajuda.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -15,8 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -26,25 +26,35 @@ public class UserService {
     private  UserRepository userRepository;
     private  RoleRepository roleRepository;
     private  BCryptPasswordEncoder passwordEncoder;
+    private  CallRepository callRepository;
 
 
-    public ResponseEntity<Void> registerUser(@RequestBody CreateUserDto dto) {
+    public ResponseEntity<Boolean> registerOrUpdateUser(@RequestBody CreateUserDto dto, UUID id) {
+        var basicRole = roleRepository.findByName(dto.permissao());
 
-        var basicRole = roleRepository.findByName(Role.Values.USUARIO.name());
+        User userFromDb = userRepository.findByUserId(id);
 
-        var userFromDb = userRepository.findByUsername(dto.username());
-        if (userFromDb.isPresent()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        if (Objects.nonNull(userFromDb)) {
+            User user = userFromDb;
+            user.setName(dto.name());
+            user.setEmail(dto.email());
+            user.setRoles(new HashSet<>(Set.of(basicRole)));
+
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Boolean.TRUE);
+        } else {
+            User user = new User();
+            user.setUsername(dto.username());
+            user.setPassword(passwordEncoder.encode(dto.password()));
+            user.setName(dto.name());
+            user.setEmail(dto.email());
+            user.setRoles(Set.of(basicRole));
+
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Boolean.TRUE);
         }
-
-        var user = new User();
-        user.setUsername(dto.username());
-        user.setPassword(passwordEncoder.encode(dto.password()));
-        user.setRoles(Set.of(basicRole));
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<List<UserResponse>> listUsers() {
@@ -53,6 +63,8 @@ public class UserService {
                 .map(user -> new UserResponse(
                         user.getUserId(),
                         user.getUsername(),
+                        user.getName(),
+                        user.getEmail(),
                         user.getRoles().stream()
                                 .map(role -> new RoleDto(role.getRoleId(), role.getName()))
                                 .collect(Collectors.toSet())
@@ -60,4 +72,22 @@ public class UserService {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(userDtos);
     }
+
+    public ResponseEntity<Boolean> deleteUser(UUID id) {
+
+        User userFromDb = userRepository.findByUserId(id);
+
+        List<Call> chamados = callRepository.findByUser_UserId(id);
+
+        if(!chamados.isEmpty()){
+            throw new RuntimeException("Não foi possivel realizar a exclusão existem chamados vinculados ao User");
+        }
+
+        if (Objects.nonNull(userFromDb)) {
+            userRepository.delete(userFromDb);
+            return ResponseEntity.ok(Boolean.TRUE);
+        }
+        return ResponseEntity.ok(Boolean.FALSE);
+    }
+
 }

@@ -26,6 +26,11 @@ public class User {
     private String username;
     private String password;
 
+    private String name;
+
+    @Column(unique = true)
+    private String email;
+
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
             name = "tb_users_roles",
