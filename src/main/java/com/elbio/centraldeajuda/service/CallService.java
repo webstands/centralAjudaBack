@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,9 +41,10 @@ public class CallService {
         return convertToDto(savedCall);
     }
 
-    public Page<CallDto> listUserCalls(UUID UIIUser, Pageable pageable) {
-        Page<Call> calls = callRepository.findByUser(getUser(UIIUser), pageable);
-        return calls.map(this::convertToDto);
+    public List<CallDto> listUserCalls(UUID UIIUser) {
+        User user = getUser(UIIUser);
+        Collection<Call> calls = callRepository.findByUser(user);
+        return calls.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
     public CallDto closeCall(Long callId, UUID UIIUser, int rating) {

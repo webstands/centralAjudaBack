@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface CallRepository extends JpaRepository<Call, Long> {
-    Page<Call> findByUser(User user, Pageable pageable);
+    List<Call> findByUser(User user);
     List<Call> findBySubjectContainingOrId(String subject, Long id);
     List<Call> findByUser_UserId(UUID userId);
 }

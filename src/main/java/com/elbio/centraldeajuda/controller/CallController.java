@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/calls")
+@RequestMapping("calls")
 @AllArgsConstructor
 public class CallController {
 
@@ -27,10 +27,9 @@ public class CallController {
         return ResponseEntity.ok(newCallDto);
     }
 
-    @GetMapping
-    public ResponseEntity<Page<CallDto>> listUserCalls(UUID UIIUser,
-                                                       Pageable pageable) {
-        Page<CallDto> callDtos = callService.listUserCalls(UIIUser, pageable);
+    @GetMapping("/{id}")
+    public ResponseEntity<List<CallDto>> listUserCalls(@PathVariable UUID id) {
+        List<CallDto> callDtos = callService.listUserCalls(id);
         return ResponseEntity.ok(callDtos);
     }
 
