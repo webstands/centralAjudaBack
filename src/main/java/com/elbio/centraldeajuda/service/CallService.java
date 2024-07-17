@@ -4,12 +4,10 @@ import com.elbio.centraldeajuda.controller.dto.CallDto;
 import com.elbio.centraldeajuda.controller.dto.MensagemDTO;
 import com.elbio.centraldeajuda.entities.Call;
 import com.elbio.centraldeajuda.entities.User;
-import com.elbio.centraldeajuda.rabbitmq.RabbitMQSender;
+import com.elbio.centraldeajuda.rabbitmq.ConstanteR;
 import com.elbio.centraldeajuda.repository.CallRepository;
 import com.elbio.centraldeajuda.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +22,8 @@ public class CallService {
 
     private CallRepository callRepository;
     private UserRepository repository;
-    private RabbitMQSender rabbitMQSender;
+    //private RabbitMQSender rabbitMQSender;
+    private RabbitService rabbitService;
 
     public CallDto createCall(UUID UIIUser, String subject, String description) {
         Call call = new Call();
@@ -35,8 +34,15 @@ public class CallService {
         call.setClosed(false);
         Call savedCall = callRepository.save(call);
 
-        MensagemDTO mensagem = new MensagemDTO(savedCall.getUser().getUserId(), savedCall.getId(), call.getSubject(), true, false, false);
-        rabbitMQSender.send(mensagem);
+        this.rabbitService.enviaMensagem(ConstanteR.QUEUE_NAME, MensagemDTO.builder().descricao("Novo Chamado: " + call.getSubject()).build());
+        return convertToDto(savedCall);
+    }
+
+    public CallDto updateCall(CallDto callDto) {
+        Call call = callRepository.findById(callDto.id()).get();
+        call.setSubject(callDto.subject());
+        call.setDescription(callDto.description());
+        Call savedCall = callRepository.save(call);
 
         return convertToDto(savedCall);
     }
@@ -44,6 +50,11 @@ public class CallService {
     public List<CallDto> listUserCalls(UUID UIIUser) {
         User user = getUser(UIIUser);
         Collection<Call> calls = callRepository.findByUser(user);
+        return calls.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    public List<CallDto> listUserCallTodos() {
+        Collection<Call> calls = callRepository.findAll();
         return calls.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -55,8 +66,7 @@ public class CallService {
         call.setRating(rating);
         Call savedCall = callRepository.save(call);
 
-        MensagemDTO mensagem = new MensagemDTO(savedCall.getClosedBy().getUserId(), savedCall.getId(), call.getSubject(), false, false, true);
-        rabbitMQSender.send(mensagem);
+      //  rabbitMQSender.send("Chamado fechado");
 
         return convertToDto(savedCall);
     }
@@ -70,15 +80,17 @@ public class CallService {
         call.setRating(rating);
         Call savedCall = callRepository.save(call);
 
-        MensagemDTO mensagem = new MensagemDTO(savedCall.getClosedBy().getUserId(), savedCall.getId(), call.getSubject(), false, true, false);
-        rabbitMQSender.send(mensagem);
-
         return convertToDto(savedCall);
     }
 
     public List<CallDto> searchCalls(String subject, Long id) {
         List<Call> calls = callRepository.findBySubjectContainingOrId(subject, id);
         return calls.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+
+    public void deleteCall(Long id){
+        Call call = callRepository.findById(id).orElseThrow();
+        callRepository.delete(call);
     }
 
     private CallDto convertToDto(Call call) {
@@ -89,9 +101,11 @@ public class CallService {
                 call.getCreatedAt(),
                 call.getClosedAt(),
                 call.isClosed(),
-                call.getUser().getUserId(),
+                call.getUser()!= null ?call.getUser().getUserId() : null,
                 call.getClosedBy() != null ? call.getClosedBy().getUserId() : null,
-                call.getRating()
+                call.getRating(),
+                call.getUser()!= null ? call.getUser().getUsername() : null,
+                call.getClosedBy() != null ? call.getClosedBy().getUsername(): null
         );
     }
 }

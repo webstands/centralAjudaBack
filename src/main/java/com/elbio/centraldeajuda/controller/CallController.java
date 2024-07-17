@@ -1,14 +1,10 @@
 package com.elbio.centraldeajuda.controller;
 
 import com.elbio.centraldeajuda.controller.dto.CallDto;
-import com.elbio.centraldeajuda.entities.User;
 import com.elbio.centraldeajuda.service.CallService;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,15 +17,27 @@ public class CallController {
 
     private CallService callService;
 
-    public ResponseEntity<CallDto> createCall(UUID UIIUser,
-                                              @RequestBody CallDto callDto) {
-        CallDto newCallDto = callService.createCall(UIIUser, callDto.subject(), callDto.description());
+    @PostMapping
+    public ResponseEntity<CallDto> createCall(@RequestBody CallDto callDto) {
+        CallDto newCallDto = callService.createCall(callDto.userId(), callDto.subject(), callDto.description());
+        return ResponseEntity.ok(newCallDto);
+    }
+
+    @PutMapping
+    public ResponseEntity<CallDto> updateCall(@RequestBody CallDto callDto) {
+        CallDto newCallDto = callService.updateCall(callDto);
         return ResponseEntity.ok(newCallDto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<List<CallDto>> listUserCalls(@PathVariable UUID id) {
         List<CallDto> callDtos = callService.listUserCalls(id);
+        return ResponseEntity.ok(callDtos);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CallDto>> listUserCallTodos() {
+        List<CallDto> callDtos = callService.listUserCallTodos();
         return ResponseEntity.ok(callDtos);
     }
 
@@ -50,4 +58,12 @@ public class CallController {
         List<CallDto> callDtos = callService.searchCalls(query, Long.parseLong(query));
         return ResponseEntity.ok(callDtos);
     }
+
+    @Transactional
+    @DeleteMapping(path= "/{id}")
+    public ResponseEntity<Boolean> deleteUser(@PathVariable Long id) {
+        callService.deleteCall(id);
+        return ResponseEntity.ok(Boolean.TRUE);
+    }
+
 }

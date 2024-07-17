@@ -14,7 +14,7 @@ public class RabbitMQTestRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         try {
-            rabbitTemplate.convertAndSend("testQueue", "Test Message");
+            rabbitTemplate.convertAndSend("call-queue", "Test Message");
             System.out.println("RabbitMQ connection test successful");
         } catch (Exception e) {
             e.printStackTrace();
