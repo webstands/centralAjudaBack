@@ -64,7 +64,7 @@ public class AdminUserConfig implements CommandLineRunner {
         );
 
         //inserindo um GERENCIADOR
-        var roleGerenciador = roleRepository.findByName(Role.Values.ADMIN.name());
+        var roleGerenciador = roleRepository.findByName(Role.Values.GERENCIADOR.name());
 
         var userGerenciador = userRepository.findByUsername("ger");
 
