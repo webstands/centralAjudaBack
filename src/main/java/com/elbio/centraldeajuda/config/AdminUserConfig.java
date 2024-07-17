@@ -62,5 +62,24 @@ public class AdminUserConfig implements CommandLineRunner {
                     userRepository.save(user);
                 }
         );
+
+        //inserindo um GERENCIADOR
+        var roleGerenciador = roleRepository.findByName(Role.Values.ADMIN.name());
+
+        var userGerenciador = userRepository.findByUsername("ger");
+
+        userGerenciador.ifPresentOrElse(
+                user -> {
+                    System.out.println("ger ja existe");
+                },
+                () -> {
+                    var user = new User();
+                    user.setUsername("ger");
+                    user.setPassword(passwordEncoder.encode("123"));
+                    user.setRoles(Set.of(roleGerenciador));
+                    userRepository.save(user);
+                }
+        );
+
     }
 }
